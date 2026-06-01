@@ -784,7 +784,3 @@ class ArtisanCuckooClockView @JvmOverloads constructor(
     }
 }
 
-That's everything. Commit all changes and rebuild! The Cuckoo tab will be the default landing screen with the full artisan clock, animated hands, synced pendulum, cuckoo animation, date, and moon phase.
-
-
-
