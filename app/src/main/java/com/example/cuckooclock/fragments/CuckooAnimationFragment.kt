@@ -10,7 +10,7 @@ import com.example.cuckooclock.views.CuckooAnimationView
 
 class CuckooAnimationFragment : Fragment() {
 
-    private lateinit var animView: CuckooAnimationView
+    private var animView: CuckooAnimationView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -19,11 +19,16 @@ class CuckooAnimationFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        animView = view.findViewById(R.id.cuckooAnimView)
+        animView = view.findViewById<CuckooAnimationView>(R.id.cuckooAnimView)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        animView = null
     }
 
     fun triggerAnimation(count: Int) {
         if (!isAdded) return
-        animView.animateCuckoo(count)
+        animView?.animateCuckoo(count)
     }
 }
