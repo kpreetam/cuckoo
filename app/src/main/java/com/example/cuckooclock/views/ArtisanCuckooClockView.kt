@@ -170,6 +170,20 @@ fun animateSingleCuckoo(index: Int, total: Int) {
         animateBirdOut { animateBob { animateBirdIn {} } }
     }
 }
+fun animateCuckoo(count: Int) {
+    if (count <= 0 || isAnimating) return
+
+    isAnimating = true
+
+    // Each cuckoo cycle (door → bird out → bob → bird in) lasts ~900ms
+    val cycleDuration = 900L
+
+    for (i in 0 until count) {
+        postDelayed({
+            animateSingleCuckoo(i, count)
+        }, i * cycleDuration)
+    }
+}
 
 private fun finishAnimation() {
     animateDoor(false) { isAnimating = false; invalidate() }
