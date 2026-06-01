@@ -18,9 +18,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.cuckooclock.databinding.ActivityMainBinding
-import com.example.cuckooclock.fragments.AnalogClockFragment
+import com.example.cuckooclock.fragments.ArtisanClockFragment
 import com.example.cuckooclock.fragments.BitByteClockFragment
-import com.example.cuckooclock.fragments.CuckooAnimationFragment
 import com.example.cuckooclock.fragments.DigitalClockFragment
 import com.google.android.material.tabs.TabLayout
 
@@ -28,7 +27,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val handler = Handler(Looper.getMainLooper())
-    private var cuckooFragment: CuckooAnimationFragment? = null
+    private var artisanFragment: ArtisanClockFragment? = null
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -41,8 +40,7 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             val isHalf = intent.getBooleanExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
             val hourCount = intent.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1)
-            val count = if (isHalf) 1 else hourCount
-            cuckooFragment?.triggerAnimation(count)
+            artisanFragment?.triggerAnimation(if (isHalf) 1 else hourCount)
         }
     }
 
@@ -63,6 +61,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupTabs() {
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🐦 Cuckoo"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Digital"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Bit/Byte"))
+
+        val firstFragment = ArtisanClockFragment().also { artisanFragment = it }
+        showFragment(firstFragment)
+
+        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                val fragment: Fragment = when (tab.position) {
+                    0 -> ArtisanClockFragment().also { artisanFragment = it }
+                    1 -> { artisanFragment = null; DigitalClockFragment() }
+                    2 -> { artisanFragment = null; BitByteClockFragment() }
+                    else -> ArtisanClockFragment().also { artisanFragment = it }
+                }
+                showFragment(fragment)
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+    }
+
+    private fun showFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
+    }
+
+    private fun updateCurrentFragment() {
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+        when (fragment) {
+            is ArtisanClockFragment -> fragment.tick()
+            is DigitalClockFragment -> fragment.tick()
+            is BitByteClockFragment -> fragment.tick()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         handler.post(tickRunnable)
@@ -80,57 +116,15 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(chimeReceiver)
     }
 
-    private fun setupTabs() {
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Digital"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Analogue"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Binary"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Cuckoo 🐦"))
-
-        showFragment(DigitalClockFragment())
-
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                val fragment: Fragment = when (tab.position) {
-                    0 -> DigitalClockFragment()
-                    1 -> AnalogClockFragment()
-                    2 -> BitByteClockFragment()
-                    3 -> CuckooAnimationFragment().also { cuckooFragment = it }
-                    else -> DigitalClockFragment()
-                }
-                if (tab.position != 3) cuckooFragment = null
-                showFragment(fragment)
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
-    }
-
-    private fun showFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
-            .commit()
-    }
-
-    private fun updateCurrentFragment() {
-        val fragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
-        when (fragment) {
-            is DigitalClockFragment -> fragment.tick()
-            is AnalogClockFragment -> fragment.tick()
-            is BitByteClockFragment -> fragment.tick()
-        }
-    }
-
     private fun requestPermissions() {
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED)
                 permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-            }
         }
-        if (permissions.isNotEmpty()) {
+        if (permissions.isNotEmpty())
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 100)
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -140,10 +134,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                true
-            }
+            R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
             else -> super.onOptionsItemSelected(item)
         }
     }
