@@ -85,7 +85,6 @@
             android:title="Bedtime start"
             android:dialogTitle="Bedtime start (HH:MM, 24h)"
             android:defaultValue="22:00"
-            android:summary="%s"
             android:inputType="time"
             app:iconSpaceReserved="false"
             android:dependency="bedtime_enabled" />
@@ -95,7 +94,6 @@
             android:title="Bedtime end (wake up)"
             android:dialogTitle="Wake up time (HH:MM, 24h)"
             android:defaultValue="07:00"
-            android:summary="%s"
             android:inputType="time"
             app:iconSpaceReserved="false"
             android:dependency="bedtime_enabled" />
@@ -106,6 +104,15 @@
     <PreferenceCategory
         android:title="System"
         app:iconSpaceReserved="false">
+
+        <ListPreference
+            android:key="chime_audio_channel"
+            android:title="Chime audio channel"
+            android:entries="@array/audio_channel_entries"
+            android:entryValues="@array/audio_channel_values"
+            android:defaultValue="music"
+            android:summary="%s"
+            app:iconSpaceReserved="false" />
 
         <SwitchPreferenceCompat
             android:key="override_silent"
