@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cuckoo Clock</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- Chime sound options -->
+    <string-array name="chime_sound_entries">
+        <item>Cuckoo 🐦</item>
+        <item>Bell 🔔</item>
+        <item>Chime 🎵</item>
+        <item>Whistle 🎶</item>
+    </string-array>
+    <string-array name="chime_sound_values">
+        <item>cuckoo</item>
+        <item>bell</item>
+        <item>chime</item>
+        <item>whistle</item>
+    </string-array>
+</resources>
