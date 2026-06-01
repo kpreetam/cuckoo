@@ -47,6 +47,13 @@ class ChimeService : Service() {
         val hourCount = intent?.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1) ?: 1
 
         startForeground(NOTIF_ID, buildNotification(isHalf, hourCount))
+        // Broadcast to trigger animation
+val animIntent = Intent("com.example.cuckooclock.CHIME_START").apply {
+    putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, isHalf)
+    putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, hourCount)
+    setPackage(packageName)
+}
+sendBroadcast(animIntent)
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val soundKey = if (isHalf) PrefsKeys.HALF_HOUR_CHIME_SOUND else PrefsKeys.HOUR_CHIME_SOUND
