@@ -147,25 +147,33 @@ class ArtisanCuckooClockView @JvmOverloads constructor(
         }
     }
 
-    fun animateCuckoo(count: Int) {
-        if (isAnimating) return
-        isAnimating = true
-        doChimeSequence(count, 0)
-    }
-
-    private fun doChimeSequence(total: Int, current: Int) {
-        if (current >= total) {
-            animateDoor(false) { isAnimating = false; invalidate() }
-            return
-        }
-        if (current == 0) {
+fun animateSingleCuckoo(index: Int, total: Int) {
+    if (index == 0) {
+        // First cuckoo: open door then bird out+bob
+        if (!isAnimating) {
+            isAnimating = true
             animateDoor(true) {
-                animateBirdOut { animateBob { animateBirdIn { doChimeSequence(total, current + 1) } } }
+                animateBirdOut { animateBob { animateBirdIn {
+                    if (index >= total - 1) finishAnimation()
+                } } }
             }
         } else {
-            animateBirdOut { animateBob { animateBirdIn { doChimeSequence(total, current + 1) } } }
+            animateBirdOut { animateBob { animateBirdIn {
+                if (index >= total - 1) finishAnimation()
+            } } }
         }
+    } else if (index >= total - 1) {
+        // Last cuckoo: bob then close door
+        animateBirdOut { animateBob { animateBirdIn { finishAnimation() } } }
+    } else {
+        // Middle cuckoos: just bob
+        animateBirdOut { animateBob { animateBirdIn {} } }
     }
+}
+
+private fun finishAnimation() {
+    animateDoor(false) { isAnimating = false; invalidate() }
+}
 
     private fun animateDoor(open: Boolean, onDone: () -> Unit) {
         ValueAnimator.ofFloat(if (open) 0f else 1f, if (open) 1f else 0f).apply {
