@@ -9,12 +9,14 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.media.ToneGenerator
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.preference.PreferenceManager
+
 
 class ChimeService : Service() {
 
@@ -130,7 +132,27 @@ private fun requestAudioFocus(sound: String, volume: Float) {
         }
     }
 
-    private fun playSynthCuckoo(volume: Float, onComplete: () -> Unit) {
+private fun playSynthCuckoo(volume: Float, onComplete: () -> Unit) {
+    try {
+        val mp = MediaPlayer().apply {
+            val afd = resources.openRawResourceFd(R.raw.cuckoo)
+            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            afd.close()
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            setVolume(volume, volume)
+            prepare()
+        }
+        mp.setOnCompletionListener {
+            it.release()
+            onComplete()
+        }
+        mp.start()
+    } catch (e: Exception) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
         toneGen = ToneGenerator(getAudioStream(), volInt)
         toneGen?.startTone(ToneGenerator.TONE_PROP_BEEP, 200)
@@ -143,6 +165,7 @@ private fun requestAudioFocus(sound: String, volume: Float) {
             }, 300)
         }, 250)
     }
+}
 
     private fun playSynthBell(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
