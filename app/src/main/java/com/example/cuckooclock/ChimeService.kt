@@ -7,8 +7,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioFocusRequest
 import android.media.AudioManager
-import android.media.MediaPlayer
 import android.media.ToneGenerator
 import android.os.Handler
 import android.os.IBinder
@@ -18,33 +18,33 @@ import androidx.preference.PreferenceManager
 
 class ChimeService : Service() {
 
-    private var mediaPlayer: MediaPlayer? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var toneGen: ToneGenerator? = null
     private var cuckooCount = 0
     private var totalCuckoos = 0
-    private var toneGen: ToneGenerator? = null
+    private var audioManager: AudioManager? = null
+    private var focusRequest: AudioFocusRequest? = null
 
     companion object {
         const val CHANNEL_ID = "cuckoo_chime_channel"
         const val NOTIF_ID = 1
-        // Sound options
-        const val SOUND_CUCKOO = "cuckoo"       // synthesized cuckoo
-        const val SOUND_BELL = "bell"            // bell tone
-        const val SOUND_CHIME = "chime"          // wind chime style
-        const val SOUND_WHISTLE = "whistle"      // whistle
+        const val SOUND_CUCKOO = "cuckoo"
+        const val SOUND_BELL = "bell"
+        const val SOUND_CHIME = "chime"
+        const val SOUND_WHISTLE = "whistle"
     }
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val isHalf = intent?.getBooleanExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false) ?: false
         val hourCount = intent?.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1) ?: 1
 
-        val notification = buildNotification(isHalf, hourCount)
-        startForeground(NOTIF_ID, notification)
+        startForeground(NOTIF_ID, buildNotification(isHalf, hourCount))
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val soundKey = if (isHalf) PrefsKeys.HALF_HOUR_CHIME_SOUND else PrefsKeys.HOUR_CHIME_SOUND
@@ -55,21 +55,35 @@ class ChimeService : Service() {
         totalCuckoos = if (isHalf) 1 else hourCount
         cuckooCount = 0
 
-        // Override DND if required
-        val overrideSilent = prefs.getBoolean(PrefsKeys.OVERRIDE_SILENT, false)
-        if (overrideSilent) {
-            val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) {
-                audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-            }
-        }
-
-        playChimeSequence(sound, volume)
+        requestAudioFocus(sound, volume)
         return START_NOT_STICKY
+    }
+
+    private fun requestAudioFocus(sound: String, volume: Float) {
+        val focusChangeListener = AudioManager.OnAudioFocusChangeListener { }
+
+        val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .setAcceptsDelayedFocusGain(false)
+            .setOnAudioFocusChangeListener(focusChangeListener)
+            .build()
+
+        focusRequest = request
+        val result = audioManager?.requestAudioFocus(request)
+
+        // Proceed whether granted or ducked — AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+        // means other music lowers its volume while we chime
+        playChimeSequence(sound, volume)
     }
 
     private fun playChimeSequence(sound: String, volume: Float) {
         if (cuckooCount >= totalCuckoos) {
+            abandonAudioFocus()
             stopSelf()
             return
         }
@@ -78,9 +92,17 @@ class ChimeService : Service() {
             if (cuckooCount < totalCuckoos) {
                 handler.postDelayed({ playChimeSequence(sound, volume) }, 600)
             } else {
-                handler.postDelayed({ stopSelf() }, 500)
+                handler.postDelayed({
+                    abandonAudioFocus()
+                    stopSelf()
+                }, 500)
             }
         }
+    }
+
+    private fun abandonAudioFocus() {
+        focusRequest?.let { audioManager?.abandonAudioFocusRequest(it) }
+        focusRequest = null
     }
 
     private fun playSingleChime(sound: String, volume: Float, onComplete: () -> Unit) {
@@ -93,10 +115,9 @@ class ChimeService : Service() {
         }
     }
 
-    // Synthesize a two-tone cuckoo: C5 (523Hz) then G4 (392Hz)
     private fun playSynthCuckoo(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_ALARM, volInt)
+        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
         toneGen?.startTone(ToneGenerator.TONE_PROP_BEEP, 200)
         handler.postDelayed({
             toneGen?.startTone(ToneGenerator.TONE_PROP_BEEP2, 250)
@@ -108,10 +129,9 @@ class ChimeService : Service() {
         }, 250)
     }
 
-    // Bell: single CDMA high tone
     private fun playSynthBell(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_ALARM, volInt)
+        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
         toneGen?.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 500)
         handler.postDelayed({
             toneGen?.release()
@@ -120,10 +140,9 @@ class ChimeService : Service() {
         }, 550)
     }
 
-    // Chime: SUP PIP tone
     private fun playSynthChime(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_ALARM, volInt)
+        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
         toneGen?.startTone(ToneGenerator.TONE_SUP_PIP, 400)
         handler.postDelayed({
             toneGen?.release()
@@ -132,10 +151,9 @@ class ChimeService : Service() {
         }, 450)
     }
 
-    // Whistle: DTMF 0
     private fun playSynthWhistle(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_ALARM, volInt)
+        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
         toneGen?.startTone(ToneGenerator.TONE_DTMF_0, 350)
         handler.postDelayed({
             toneGen?.release()
@@ -157,12 +175,8 @@ class ChimeService : Service() {
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Cuckoo Chimes",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Hourly and half-hourly cuckoo chimes"
-        }
+            CHANNEL_ID, "Cuckoo Chimes", NotificationManager.IMPORTANCE_HIGH
+        ).apply { description = "Hourly and half-hourly cuckoo chimes" }
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(channel)
     }
@@ -171,8 +185,7 @@ class ChimeService : Service() {
         handler.removeCallbacksAndMessages(null)
         toneGen?.release()
         toneGen = null
-        mediaPlayer?.release()
-        mediaPlayer = null
+        abandonAudioFocus()
         super.onDestroy()
     }
 
