@@ -28,24 +28,30 @@ class SettingsActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed()
         return true
     }
+class SettingsFragment : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        setPreferencesFromResource(R.xml.preferences, rootKey)
+        setupDndOverride()
+        bindSummary(PrefsKeys.BEDTIME_START)
+        bindSummary(PrefsKeys.BEDTIME_END)
+    }
 
-    class SettingsFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.preferences, rootKey)
-            setupDndOverride()
-        }
+    private fun bindSummary(key: String) {
+        val pref = findPreference<EditTextPreference>(key) ?: return
+        pref.summaryProvider = EditTextPreference.SimpleSummaryProvider.getInstance()
+    }
 
-        private fun setupDndOverride() {
-            val dndPref = findPreference<SwitchPreferenceCompat>(PrefsKeys.OVERRIDE_SILENT)
-            dndPref?.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue as Boolean) {
-                    val nm = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    if (!nm.isNotificationPolicyAccessGranted) {
-                        startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
-                        false
-                    } else true
+    private fun setupDndOverride() {
+        val dndPref = findPreference<SwitchPreferenceCompat>(PrefsKeys.OVERRIDE_SILENT)
+        dndPref?.setOnPreferenceChangeListener { _, newValue ->
+            if (newValue as Boolean) {
+                val nm = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                if (!nm.isNotificationPolicyAccessGranted) {
+                    startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                    false
                 } else true
-            }
+            } else true
         }
     }
+}
 }
