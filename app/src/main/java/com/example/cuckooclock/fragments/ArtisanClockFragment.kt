@@ -23,4 +23,9 @@ class ArtisanClockFragment : Fragment() {
     fun triggerAnimation(count: Int) { if (!isAdded) return; clockView?.animateCuckoo(count) }
 
     override fun onDestroyView() { super.onDestroyView(); clockView = null }
+
+    fun triggerSingleBob(index: Int, total: Int) {
+    if (!isAdded) return
+    clockView?.animateSingleCuckoo(index, total)
+}
 }
