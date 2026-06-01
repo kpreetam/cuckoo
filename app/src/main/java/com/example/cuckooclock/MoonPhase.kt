@@ -17,14 +17,22 @@ object MoonPhase {
         val a = y / 100
         val b = 2 - a + a / 4
         val jd = (365.25 * (y + 4716)).toInt() + (30.6001 * (m + 1)).toInt() + day + b - 1524.5
-        val phase = ((( jd - 2451549.5) % 29.53058867) + 29.53058867) % 29.53058867
-        val fraction = phase / 29.53058867
+
+        // Reference calibrated to May 27 2026 new moon
+        val refJD = 2451560.528
+        val synodic = 29.530588853
+        val phase = (((jd - refJD) % synodic) + synodic) % synodic
+        val fraction = phase / synodic
 
         val phaseName = when {
-            phase < 1.85 -> "New Moon"; phase < 7.38 -> "Waxing Crescent"
-            phase < 9.22 -> "First Quarter"; phase < 14.77 -> "Waxing Gibbous"
-            phase < 16.61 -> "Full Moon"; phase < 22.15 -> "Waning Gibbous"
-            phase < 23.99 -> "Last Quarter"; else -> "Waning Crescent"
+            phase < 1.85  -> "New Moon"
+            phase < 7.38  -> "Waxing Crescent"
+            phase < 9.22  -> "First Quarter"
+            phase < 14.77 -> "Waxing Gibbous"
+            phase < 16.61 -> "Full Moon"
+            phase < 22.15 -> "Waning Gibbous"
+            phase < 23.99 -> "Last Quarter"
+            else          -> "Waning Crescent"
         }
         val trending = if (fraction < 0.5) "Trending → Full Moon" else "Trending → New Moon"
         val emoji = when {
