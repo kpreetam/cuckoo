@@ -26,6 +26,25 @@ class ChimeService : Service() {
     private var totalCuckoos = 0
     private var audioManager: AudioManager? = null
     private var focusRequest: AudioFocusRequest? = null
+    private var originalVolume = -1
+
+private fun setFixedVolume() {
+    val stream = getAudioStream()
+    val maxVol = audioManager?.getStreamMaxVolume(stream) ?: return
+    originalVolume = audioManager?.getStreamVolume(stream) ?: 0
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+    val volumeKey = PrefsKeys.HOUR_CHIME_VOLUME
+    val targetVol = (prefs.getInt(volumeKey, 80) / 100f * maxVol).toInt().coerceIn(1, maxVol)
+    audioManager?.setStreamVolume(stream, targetVol, 0)
+}
+
+private fun restoreVolume() {
+    if (originalVolume >= 0) {
+        audioManager?.setStreamVolume(getAudioStream(), originalVolume, 0)
+        originalVolume = -1
+    }
+}
+    
 
     companion object {
         const val CHANNEL_ID = "cuckoo_chime_channel"
@@ -102,6 +121,7 @@ private fun requestAudioFocus(sound: String, volume: Float) {
 
     focusRequest = request
     audioManager?.requestAudioFocus(request)
+    setFixedVolume()
     playChimeSequence(sound, volume)
 }
 
@@ -125,6 +145,7 @@ private fun requestAudioFocus(sound: String, volume: Float) {
     }
 
     private fun abandonAudioFocus() {
+        restoreVolume()
         focusRequest?.let { audioManager?.abandonAudioFocusRequest(it) }
         focusRequest = null
     }
@@ -239,4 +260,5 @@ private fun buildNotification(isHalf: Boolean, hourCount: Int): Notification {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-}
+
+   }
