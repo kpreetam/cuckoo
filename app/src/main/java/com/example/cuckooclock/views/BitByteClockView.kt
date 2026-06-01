@@ -78,7 +78,7 @@ class BitByteClockView @JvmOverloads constructor(
 
         // Title
         paintTitle.textSize = titleH * 0.65f
-        canvas.drawText("BIT / BYTE CLOCK", w / 2f, titleH * 0.8f, paintTitle)
+        canvas.drawText("BINARY CLOCK", w / 2f, titleH * 0.8f, paintTitle)
 
         // Column labels
         paintColLabel.textSize = labelH * 0.6f
