@@ -2,8 +2,10 @@ package com.example.cuckooclock
 
 import android.Manifest
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +20,7 @@ import androidx.fragment.app.Fragment
 import com.example.cuckooclock.databinding.ActivityMainBinding
 import com.example.cuckooclock.fragments.AnalogClockFragment
 import com.example.cuckooclock.fragments.BitByteClockFragment
+import com.example.cuckooclock.fragments.CuckooAnimationFragment
 import com.example.cuckooclock.fragments.DigitalClockFragment
 import com.google.android.material.tabs.TabLayout
 
@@ -25,6 +28,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val handler = Handler(Looper.getMainLooper())
+    private var cuckooFragment: CuckooAnimationFragment? = null
+
     private val tickRunnable = object : Runnable {
         override fun run() {
             updateCurrentFragment()
@@ -32,27 +37,54 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-    setSupportActionBar(binding.toolbar)
-    requestPermissions()
-    setupTabs()
-    ChimeScheduler.scheduleNextChime(this)
-    binding.btnTest.setOnClickListener {
-        val intent = Intent(this, ChimeService::class.java).apply {
-            putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
-            putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 3)
+    private val chimeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val isHalf = intent.getBooleanExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
+            val hourCount = intent.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1)
+            val count = if (isHalf) 1 else hourCount
+            cuckooFragment?.triggerAnimation(count)
         }
-        startForegroundService(intent)
     }
-}
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
+        requestPermissions()
+        setupTabs()
+        ChimeScheduler.scheduleNextChime(this)
+        binding.btnTest.setOnClickListener {
+            val intent = Intent(this, ChimeService::class.java).apply {
+                putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
+                putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 3)
+            }
+            startForegroundService(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler.post(tickRunnable)
+        val filter = IntentFilter("com.example.cuckooclock.CHIME_START")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(chimeReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(chimeReceiver, filter)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        handler.removeCallbacks(tickRunnable)
+        unregisterReceiver(chimeReceiver)
+    }
 
     private fun setupTabs() {
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Digital"))
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Analogue"))
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Bit/Byte"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Cuckoo 🐦"))
 
         showFragment(DigitalClockFragment())
 
@@ -62,8 +94,10 @@ override fun onCreate(savedInstanceState: Bundle?) {
                     0 -> DigitalClockFragment()
                     1 -> AnalogClockFragment()
                     2 -> BitByteClockFragment()
+                    3 -> CuckooAnimationFragment().also { cuckooFragment = it }
                     else -> DigitalClockFragment()
                 }
+                if (tab.position != 3) cuckooFragment = null
                 showFragment(fragment)
             }
             override fun onTabUnselected(tab: TabLayout.Tab) {}
@@ -94,10 +128,6 @@ override fun onCreate(savedInstanceState: Bundle?) {
                 permissions.add(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (!nm.isNotificationPolicyAccessGranted) {
-            // Will prompt user in settings if they enable DND override
-        }
         if (permissions.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 100)
         }
@@ -116,15 +146,5 @@ override fun onCreate(savedInstanceState: Bundle?) {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        handler.post(tickRunnable)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        handler.removeCallbacks(tickRunnable)
     }
 }
