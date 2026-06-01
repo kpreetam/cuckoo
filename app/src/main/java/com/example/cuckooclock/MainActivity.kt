@@ -37,12 +37,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val chimeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val isHalf = intent.getBooleanExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
-            val hourCount = intent.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1)
-            artisanFragment?.triggerAnimation(if (isHalf) 1 else hourCount)
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            "com.example.cuckooclock.CHIME_EACH" -> {
+                // Animate one bob per cuckoo sound
+                artisanFragment?.triggerSingleBob(
+                    intent.getIntExtra("cuckoo_index", 0),
+                    intent.getIntExtra("cuckoo_total", 1)
+                )
+            }
         }
     }
+}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +108,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         handler.post(tickRunnable)
-        val filter = IntentFilter("com.example.cuckooclock.CHIME_START")
+        val filter = IntentFilter("com.example.cuckooclock.CHIME_EACH")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(chimeReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
