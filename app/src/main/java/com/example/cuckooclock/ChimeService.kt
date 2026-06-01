@@ -200,24 +200,28 @@ private fun playSynthCuckoo(volume: Float, onComplete: () -> Unit) {
         }, 400)
     }
 
-    private fun buildNotification(isHalf: Boolean, hourCount: Int): Notification {
-        val text = if (isHalf) "Half-hour chime 🕐" else "Chiming $hourCount o'clock 🐦"
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Cuckoo Clock")
-            .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setOngoing(true)
-            .build()
-    }
+private fun buildNotification(isHalf: Boolean, hourCount: Int): Notification {
+    return NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("🐦")
+        .setContentText("")
+        .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setSilent(true)
+        .build()
+}
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID, "Cuckoo Chimes", NotificationManager.IMPORTANCE_HIGH
-        ).apply { description = "Hourly and half-hourly cuckoo chimes" }
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(channel)
+    val channel = NotificationChannel(
+        CHANNEL_ID, "Cuckoo Chimes", NotificationManager.IMPORTANCE_LOW
+    ).apply {
+        description = "Hourly and half-hourly cuckoo chimes"
+        setSound(null, null)
+        enableVibration(false)
+        enableLights(false)
     }
+    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    nm.createNotificationChannel(channel)
+}
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
