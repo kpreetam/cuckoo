@@ -67,12 +67,7 @@ private fun restoreVolume() {
 
         startForeground(NOTIF_ID, buildNotification(isHalf, hourCount))
         // Broadcast to trigger animation
-val animIntent = Intent("com.example.cuckooclock.CHIME_START").apply {
-    putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, isHalf)
-    putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, hourCount)
-    setPackage(packageName)
-}
-sendBroadcast(animIntent)
+
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val soundKey = if (isHalf) PrefsKeys.HALF_HOUR_CHIME_SOUND else PrefsKeys.HOUR_CHIME_SOUND
@@ -126,23 +121,31 @@ private fun requestAudioFocus(sound: String, volume: Float) {
 }
 
     private fun playChimeSequence(sound: String, volume: Float) {
-        if (cuckooCount >= totalCuckoos) {
-            abandonAudioFocus()
-            stopSelf()
-            return
-        }
-        playSingleChime(sound, volume) {
-            cuckooCount++
-            if (cuckooCount < totalCuckoos) {
-                handler.postDelayed({ playChimeSequence(sound, volume) }, 600)
-            } else {
-                handler.postDelayed({
-                    abandonAudioFocus()
-                    stopSelf()
-                }, 500)
-            }
+    if (cuckooCount >= totalCuckoos) {
+        abandonAudioFocus()
+        stopSelf()
+        return
+    }
+    // Broadcast EACH individual cuckoo so animation stays in sync
+    val animIntent = Intent("com.example.cuckooclock.CHIME_EACH").apply {
+        putExtra("cuckoo_index", cuckooCount)
+        putExtra("cuckoo_total", totalCuckoos)
+        setPackage(packageName)
+    }
+    sendBroadcast(animIntent)
+
+    playSingleChime(sound, volume) {
+        cuckooCount++
+        if (cuckooCount < totalCuckoos) {
+            handler.postDelayed({ playChimeSequence(sound, volume) }, 600)
+        } else {
+            handler.postDelayed({
+                abandonAudioFocus()
+                stopSelf()
+            }, 500)
         }
     }
+}
 
     private fun abandonAudioFocus() {
         restoreVolume()
