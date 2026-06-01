@@ -59,27 +59,42 @@ class ChimeService : Service() {
         return START_NOT_STICKY
     }
 
-    private fun requestAudioFocus(sound: String, volume: Float) {
-        val focusChangeListener = AudioManager.OnAudioFocusChangeListener { }
-
-        val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            .setAcceptsDelayedFocusGain(false)
-            .setOnAudioFocusChangeListener(focusChangeListener)
-            .build()
-
-        focusRequest = request
-        val result = audioManager?.requestAudioFocus(request)
-
-        // Proceed whether granted or ducked — AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
-        // means other music lowers its volume while we chime
-        playChimeSequence(sound, volume)
+    private fun getAudioStream(): Int {
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+    return when (prefs.getString(PrefsKeys.CHIME_AUDIO_CHANNEL, "music")) {
+        "alarm" -> AudioManager.STREAM_ALARM
+        "notification" -> AudioManager.STREAM_NOTIFICATION
+        else -> AudioManager.STREAM_MUSIC
     }
+}
+
+private fun requestAudioFocus(sound: String, volume: Float) {
+    val stream = getAudioStream()
+    val usage = when (stream) {
+        AudioManager.STREAM_ALARM -> AudioAttributes.USAGE_ALARM
+        AudioManager.STREAM_NOTIFICATION -> AudioAttributes.USAGE_NOTIFICATION
+        else -> AudioAttributes.USAGE_MEDIA
+    }
+    val focusType = when (stream) {
+        AudioManager.STREAM_ALARM -> AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+        else -> AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+    }
+
+    val request = AudioFocusRequest.Builder(focusType)
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(usage)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+        )
+        .setAcceptsDelayedFocusGain(false)
+        .setOnAudioFocusChangeListener { }
+        .build()
+
+    focusRequest = request
+    audioManager?.requestAudioFocus(request)
+    playChimeSequence(sound, volume)
+}
 
     private fun playChimeSequence(sound: String, volume: Float) {
         if (cuckooCount >= totalCuckoos) {
@@ -117,7 +132,7 @@ class ChimeService : Service() {
 
     private fun playSynthCuckoo(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
+        toneGen = ToneGenerator(getAudioStream(), volInt)
         toneGen?.startTone(ToneGenerator.TONE_PROP_BEEP, 200)
         handler.postDelayed({
             toneGen?.startTone(ToneGenerator.TONE_PROP_BEEP2, 250)
@@ -131,7 +146,7 @@ class ChimeService : Service() {
 
     private fun playSynthBell(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
+        toneGen = ToneGenerator(getAudioStream(), volInt)
         toneGen?.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 500)
         handler.postDelayed({
             toneGen?.release()
@@ -142,7 +157,7 @@ class ChimeService : Service() {
 
     private fun playSynthChime(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
+        toneGen = ToneGenerator(getAudioStream(), volInt)
         toneGen?.startTone(ToneGenerator.TONE_SUP_PIP, 400)
         handler.postDelayed({
             toneGen?.release()
@@ -153,7 +168,7 @@ class ChimeService : Service() {
 
     private fun playSynthWhistle(volume: Float, onComplete: () -> Unit) {
         val volInt = (volume * 100).toInt().coerceIn(0, 100)
-        toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, volInt)
+        toneGen = ToneGenerator(getAudioStream(), volInt)
         toneGen?.startTone(ToneGenerator.TONE_DTMF_0, 350)
         handler.postDelayed({
             toneGen?.release()
