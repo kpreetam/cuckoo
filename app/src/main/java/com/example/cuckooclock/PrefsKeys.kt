@@ -11,4 +11,5 @@ object PrefsKeys {
     const val BEDTIME_START = "bedtime_start"
     const val BEDTIME_END = "bedtime_end"
     const val OVERRIDE_SILENT = "override_silent"
+    const val CHIME_AUDIO_CHANNEL = "chime_audio_channel"
 }
