@@ -32,16 +32,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
-
-        requestPermissions()
-        setupTabs()
-        ChimeScheduler.scheduleNextChime(this)
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    requestPermissions()
+    setupTabs()
+    ChimeScheduler.scheduleNextChime(this)
+    binding.btnTest.setOnClickListener {
+        val intent = Intent(this, ChimeService::class.java).apply {
+            putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
+            putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 3)
+        }
+        startForegroundService(intent)
     }
+}
 
     private fun setupTabs() {
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Digital"))
