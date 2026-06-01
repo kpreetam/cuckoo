@@ -25,7 +25,6 @@
             android:layout_height="wrap_content"
             android:background="@color/surface"
             app:tabSelectedTextColor="@color/gold"
-            app:tabUnselectedTextColor="@color/text_secondary"
             app:tabIndicatorColor="@color/gold"
             app:tabMode="fixed"
             app:tabGravity="fill" />
