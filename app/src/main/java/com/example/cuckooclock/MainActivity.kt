@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupTabs() {
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Digital"))
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Analogue"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Bit/Byte"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Binary"))
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Cuckoo 🐦"))
 
         showFragment(DigitalClockFragment())
