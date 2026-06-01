@@ -16,4 +16,14 @@
         <item>chime</item>
         <item>whistle</item>
     </string-array>
+    <string-array name="audio_channel_entries">
+    <item>Music 🎵</item>
+    <item>Alarm ⏰</item>
+    <item>Notification 🔔</item>
+</string-array>
+<string-array name="audio_channel_values">
+    <item>music</item>
+    <item>alarm</item>
+    <item>notification</item>
+</string-array>
 </resources>
