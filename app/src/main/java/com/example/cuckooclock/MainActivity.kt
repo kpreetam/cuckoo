@@ -68,27 +68,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupTabs() {
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🐦 Cuckoo"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Digital"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Binary"))
+    binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🐦 Cuckoo"))
+    binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Binary"))
 
-        val firstFragment = ArtisanClockFragment().also { artisanFragment = it }
-        showFragment(firstFragment)
-
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                val fragment: Fragment = when (tab.position) {
-                    0 -> ArtisanClockFragment().also { artisanFragment = it }
-                    1 -> { artisanFragment = null; DigitalClockFragment() }
-                    2 -> { artisanFragment = null; BitByteClockFragment() }
-                    else -> ArtisanClockFragment().also { artisanFragment = it }
-                }
-                showFragment(fragment)
+    val firstFragment = ArtisanClockFragment().also { artisanFragment = it }
+    showFragment(firstFragment)
+    binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        override fun onTabSelected(tab: TabLayout.Tab) {
+            val fragment: Fragment = when (tab.position) {
+                0 -> ArtisanClockFragment().also { artisanFragment = it }
+                1 -> { artisanFragment = null; BitByteClockFragment() }
+                else -> ArtisanClockFragment().also { artisanFragment = it }
             }
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
-    }
+            showFragment(fragment)
+        }
+        override fun onTabUnselected(tab: TabLayout.Tab) {}
+        override fun onTabReselected(tab: TabLayout.Tab) {}
+    })
+}
 
     private fun showFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
@@ -96,14 +93,13 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    private fun updateCurrentFragment() {
-        val fragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
-        when (fragment) {
-            is ArtisanClockFragment -> fragment.tick()
-            is DigitalClockFragment -> fragment.tick()
-            is BitByteClockFragment -> fragment.tick()
-        }
+   private fun updateCurrentFragment() {
+    val fragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+    when (fragment) {
+        is ArtisanClockFragment -> fragment.tick()
+        is BitByteClockFragment -> fragment.tick()
     }
+}
 
     override fun onResume() {
         super.onResume()
