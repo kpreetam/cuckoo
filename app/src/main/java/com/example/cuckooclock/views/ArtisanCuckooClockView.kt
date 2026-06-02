@@ -148,40 +148,25 @@ class ArtisanCuckooClockView @JvmOverloads constructor(
     }
 
 fun animateSingleCuckoo(index: Int, total: Int) {
-    if (index == 0) {
-        // First cuckoo: open door then bird out+bob
-        if (!isAnimating) {
-            isAnimating = true
-            animateDoor(true) {
-                animateBirdOut { animateBob { animateBirdIn {
-                    if (index >= total - 1) finishAnimation()
-                } } }
-            }
-        } else {
-            animateBirdOut { animateBob { animateBirdIn {
-                if (index >= total - 1) finishAnimation()
-            } } }
-        }
-    } else if (index >= total - 1) {
-        // Last cuckoo: bob then close door
-        animateBirdOut { animateBob { animateBirdIn { finishAnimation() } } }
-    } else {
-        // Middle cuckoos: just bob
-        animateBirdOut { animateBob { animateBirdIn {} } }
-    }
-}
 fun animateCuckoo(count: Int) {
     if (count <= 0 || isAnimating) return
-
     isAnimating = true
+    animateDoor(true) {
+        performCuckooChain(0, count)
+    }
+}
 
-    // Each cuckoo cycle (door → bird out → bob → bird in) lasts ~900ms
-    val cycleDuration = 900L
-
-    for (i in 0 until count) {
-        postDelayed({
-            animateSingleCuckoo(i, count)
-        }, i * cycleDuration)
+private fun performCuckooChain(index: Int, total: Int) {
+    if (index >= total) {
+        finishAnimation()
+        return
+    }
+    animateBirdOut {
+        animateBob {
+            animateBirdIn {
+                performCuckooChain(index + 1, total)
+            }
+        }
     }
 }
 
