@@ -148,7 +148,7 @@ class ArtisanCuckooClockView @JvmOverloads constructor(
     }
 
 fun animateSingleCycle(index: Int, total: Int) {
-    if (isAnimating) return  // <-- Ignore broadcasts while animating
+    if (index == 0 && isAnimating) return  // <-- Ignore broadcasts while animating
     
     if (index == 0) {
         isAnimating = true
