@@ -22,6 +22,8 @@ import com.example.cuckooclock.fragments.ArtisanClockFragment
 import com.example.cuckooclock.fragments.BitByteClockFragment
 import com.example.cuckooclock.fragments.DigitalClockFragment
 import com.google.android.material.tabs.TabLayout
+import android.provider.Settings
+import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
 
