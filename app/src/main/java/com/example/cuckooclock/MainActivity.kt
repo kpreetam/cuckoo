@@ -40,12 +40,12 @@ class MainActivity : AppCompatActivity() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             "com.example.cuckooclock.CHIME_EACH" -> {
-                // Animate one bob per cuckoo sound
-                artisanFragment?.triggerSingleBob(
-                    intent.getIntExtra("cuckoo_index", 0),
-                    intent.getIntExtra("cuckoo_total", 1)
-                )
-            }
+    val index = intent.getIntExtra("cuckoo_index", 0)
+    val total = intent.getIntExtra("cuckoo_total", 1)
+    if (index == 0) {
+        artisanFragment?.animateCuckoo(total)
+    }
+}
         }
     }
 }
