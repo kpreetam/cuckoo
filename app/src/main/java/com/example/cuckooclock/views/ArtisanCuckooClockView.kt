@@ -147,107 +147,85 @@ class ArtisanCuckooClockView @JvmOverloads constructor(
         }
     }
 
-fun animateSingleCuckoo(index: Int, total: Int) {
 fun animateCuckoo(count: Int) {
-    if (count <= 0 || isAnimating) return
-    isAnimating = true
-    animateDoor(true) {
-        performCuckooChain(0, count)
+        if (count <= 0 || isAnimating) return
+        isAnimating = true
+        animateDoor(true) {
+            performCuckooChain(0, count)
+        }
     }
-}
 
-private fun performCuckooChain(index: Int, total: Int) {
-    if (index >= total) {
-        finishAnimation()
-        return
-    }
-    animateBirdOut {
-        animateBob {
-            animateBirdIn {
-                performCuckooChain(index + 1, total)
+    private fun performCuckooChain(index: Int, total: Int) {
+        if (index >= total) {
+            finishAnimation()
+            return
+        }
+        animateBirdOut {
+            animateBob {
+                animateBirdIn {
+                    performCuckooChain(index + 1, total)
+                }
             }
         }
     }
-}
 
- fun animateCuckoo(count: Int) {
-    if (count <= 0 || isAnimating) return
-    isAnimating = true
-    animateDoor(true) {
-        performCuckooChain(0, count)
+    private fun finishAnimation() {
+        animateDoor(false) { isAnimating = false; invalidate() }
     }
-}
 
-private fun performCuckooChain(index: Int, total: Int) {
-    if (index >= total) {
-        finishAnimation()
-        return
-    }
-    animateBirdOut {
-        animateBob {
-            animateBirdIn {
-                performCuckooChain(index + 1, total)
-            }
+    private fun animateDoor(open: Boolean, onDone: () -> Unit) {
+        ValueAnimator.ofFloat(if (open) 0f else 1f, if (open) 1f else 0f).apply {
+            duration = 350
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { doorOpenAmount = it.animatedValue as Float; invalidate() }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) { onDone() }
+            })
+            start()
         }
     }
-}
 
-private fun finishAnimation() {
-    animateDoor(false) { isAnimating = false; invalidate() }
-}
-
-private fun animateDoor(open: Boolean, onDone: () -> Unit) {
-    ValueAnimator.ofFloat(if (open) 0f else 1f, if (open) 1f else 0f).apply {
-        duration = 350
-        interpolator = AccelerateDecelerateInterpolator()
-        addUpdateListener { doorOpenAmount = it.animatedValue as Float; invalidate() }
-        addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) { onDone() }
-        })
-        start()
-    }
-}
-
-private fun animateBirdOut(onDone: () -> Unit) {
-    ValueAnimator.ofFloat(0f, 1f).apply {
-        duration = 220
-        interpolator = OvershootInterpolator(1.2f)
-        addUpdateListener { birdOutAmount = it.animatedValue as Float; invalidate() }
-        addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) { onDone() }
-        })
-        start()
-    }
-}
-
-private fun animateBob(onDone: () -> Unit) {
-    ValueAnimator.ofFloat(0f, 1f).apply {
-        duration = 550
-        addUpdateListener { anim ->
-            val t = anim.animatedFraction
-            birdBobOffset = -10f * sin(Math.PI * t * 2).toFloat()
-            beakOpenAmount = if (t < 0.5f) t * 2f else (1f - t) * 2f
-            invalidate()
+    private fun animateBirdOut(onDone: () -> Unit) {
+        ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 220
+            interpolator = OvershootInterpolator(1.2f)
+            addUpdateListener { birdOutAmount = it.animatedValue as Float; invalidate() }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) { onDone() }
+            })
+            start()
         }
-        addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) {
-                birdBobOffset = 0f; beakOpenAmount = 0f; onDone()
-            }
-        })
-        start()
     }
-}
 
-private fun animateBirdIn(onDone: () -> Unit) {
-    ValueAnimator.ofFloat(1f, 0f).apply {
-        duration = 220
-        addUpdateListener { birdOutAmount = it.animatedValue as Float; invalidate() }
-        addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) { onDone() }
-        })
-        start()
+    private fun animateBob(onDone: () -> Unit) {
+        ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 550
+            addUpdateListener { anim ->
+                val t = anim.animatedFraction
+                birdBobOffset = -10f * sin(Math.PI * t * 2).toFloat()
+                beakOpenAmount = if (t < 0.5f) t * 2f else (1f - t) * 2f
+                invalidate()
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    birdBobOffset = 0f; beakOpenAmount = 0f; onDone()
+                }
+            })
+            start()
+        }
     }
-}
+
+    private fun animateBirdIn(onDone: () -> Unit) {
+        ValueAnimator.ofFloat(1f, 0f).apply {
+            duration = 220
+            addUpdateListener { birdOutAmount = it.animatedValue as Float; invalidate() }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) { onDone() }
+            })
+            start()
+        }
+    }
+
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
