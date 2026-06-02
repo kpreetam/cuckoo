@@ -56,6 +56,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         requestPermissions()
+        private fun enforceInitialDndPermission() {
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+    if (!prefs.contains("initial_dnd_requested")) {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (!nm.isNotificationPolicyAccessGranted) {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+        }
+        prefs.edit().putBoolean("initial_dnd_requested", true).apply()
+    }
+}
+        requestPermissions()
+        enforceInitialDndPermission()
         setupTabs()
         ChimeScheduler.scheduleNextChime(this)
         binding.btnTest.setOnClickListener {
