@@ -51,7 +51,7 @@
             android:title="Half-hour chime sound"
             android:entries="@array/chime_sound_entries"
             android:entryValues="@array/chime_sound_values"
-            android:defaultValue="bell"
+            android:defaultValue="cuckoo"
             android:summary="%s"
             app:iconSpaceReserved="false"
             android:dependency="half_hour_chime_enabled" />
@@ -59,7 +59,7 @@
         <SeekBarPreference
             android:key="half_hour_chime_volume"
             android:title="Half-hour chime volume"
-            android:defaultValue="60"
+            android:defaultValue="80"
             android:max="100"
             app:min="0"
             app:showSeekBarValue="true"
@@ -77,14 +77,14 @@
             android:key="bedtime_enabled"
             android:title="Enable quiet hours"
             android:summary="No chimes during sleeping hours"
-            android:defaultValue="false"
+            android:defaultValue="true"
             app:iconSpaceReserved="false" />
 
         <EditTextPreference
             android:key="bedtime_start"
             android:title="Bedtime start"
             android:dialogTitle="Bedtime start (HH:MM, 24h)"
-            android:defaultValue="22:00"
+            android:defaultValue="22:09"
             android:inputType="time"
             app:iconSpaceReserved="false"
             android:dependency="bedtime_enabled" />
@@ -93,7 +93,7 @@
             android:key="bedtime_end"
             android:title="Bedtime end (wake up)"
             android:dialogTitle="Wake up time (HH:MM, 24h)"
-            android:defaultValue="07:00"
+            android:defaultValue="06:15"
             android:inputType="time"
             app:iconSpaceReserved="false"
             android:dependency="bedtime_enabled" />
@@ -118,7 +118,7 @@
             android:key="override_silent"
             android:title="Override silent / DND mode"
             android:summary="Allow chimes even when phone is silenced (requires Do Not Disturb permission)"
-            android:defaultValue="false"
+            android:defaultValue="true"
             app:iconSpaceReserved="false" />
 
     </PreferenceCategory>
