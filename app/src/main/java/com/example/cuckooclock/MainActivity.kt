@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     val index = intent.getIntExtra("cuckoo_index", 0)
     val total = intent.getIntExtra("cuckoo_total", 1)
     if (index == 0) {
-        artisanFragment?.animateCuckoo(total)
+        artisanFragment?.triggerAnimation(total)
     }
 }
         }
