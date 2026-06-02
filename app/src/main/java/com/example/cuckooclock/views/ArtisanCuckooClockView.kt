@@ -234,7 +234,7 @@ fun animateSingleCycle(index: Int, total: Int) {
         val scale = clockW / 220f
         val clockBodyH = 160f * scale
         val roofH = 70f * scale
-        val topPad = h * 0.03f
+        val topPad = h * 0.07f + 40f
 
         canvas.save()
         canvas.translate(cx, topPad + roofH)
