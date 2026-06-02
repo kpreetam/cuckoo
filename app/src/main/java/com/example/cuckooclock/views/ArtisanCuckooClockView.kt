@@ -147,28 +147,24 @@ class ArtisanCuckooClockView @JvmOverloads constructor(
         }
     }
 
-fun animateCuckoo(count: Int) {
-        if (count <= 0 || isAnimating) return
+fun animateSingleCycle(index: Int, total: Int) {
+    if (isAnimating) return  // <-- Ignore broadcasts while animating
+    
+    if (index == 0) {
         isAnimating = true
         animateDoor(true) {
-            performCuckooChain(0, count)
+            animateBirdOut { animateBob { animateBirdIn {
+                if (total == 1) finishAnimation()
+            } } }
         }
-    }
-
-    private fun performCuckooChain(index: Int, total: Int) {
-        if (index >= total) {
+    } else if (index == total - 1) {
+        animateBirdOut { animateBob { animateBirdIn {
             finishAnimation()
-            return
-        }
-        animateBirdOut {
-            animateBob {
-                animateBirdIn {
-                    performCuckooChain(index + 1, total)
-                }
-            }
-        }
+        } } }
+    } else {
+        animateBirdOut { animateBob { animateBirdIn {} } }
     }
-
+}
     private fun finishAnimation() {
         animateDoor(false) { isAnimating = false; invalidate() }
     }
