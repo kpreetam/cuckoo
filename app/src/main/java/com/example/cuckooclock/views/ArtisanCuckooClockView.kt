@@ -247,7 +247,7 @@ fun animateCuckoo(count: Int) {
         canvas.restore()
 
         // Date & Moon drawn at bottom in real coords
-        drawDateMoon(canvas, w, h, topPad + roofH + clockBodyH * 1.05f)
+       // drawDateMoon(canvas, w, h, topPad + roofH + clockBodyH * 1.05f)
     }
 
     private fun drawClockBody(canvas: Canvas, availableH: Float) {
