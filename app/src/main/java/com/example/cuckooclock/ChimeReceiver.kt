@@ -11,29 +11,36 @@ import java.util.Calendar
 class ChimeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val isHalf = intent.getBooleanExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
-        val hourCount = intent.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1)
+    val isHalf = intent.getBooleanExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, false)
+    val hourCount = intent.getIntExtra(ChimeScheduler.EXTRA_HOUR_COUNT, 1)
+    
+    android.util.Log.d("ChimeReceiver", "Chime received: isHalf=$isHalf, hourCount=$hourCount")
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
-        // Check if this type is enabled
-        val enabled = if (isHalf) {
-            prefs.getBoolean(PrefsKeys.HALF_HOUR_CHIME_ENABLED, true)
-        } else {
-            prefs.getBoolean(PrefsKeys.HOUR_CHIME_ENABLED, true)
-        }
-
-        if (enabled && !isBedtime(context) && !isSilentModeBlocking(context)) {
-            val serviceIntent = Intent(context, ChimeService::class.java).apply {
-                putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, isHalf)
-                putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, hourCount)
-            }
-            context.startForegroundService(serviceIntent)
-        }
-
-        // Schedule the next chime
-        ChimeScheduler.scheduleNextChime(context)
+    // Check if this type is enabled
+    val enabled = if (isHalf) {
+        prefs.getBoolean(PrefsKeys.HALF_HOUR_CHIME_ENABLED, true)
+    } else {
+        prefs.getBoolean(PrefsKeys.HOUR_CHIME_ENABLED, true)
     }
+
+    android.util.Log.d("ChimeReceiver", "Enabled: $enabled, Bedtime: ${isBedtime(context)}, Silent: ${isSilentModeBlocking(context)}")
+
+    if (enabled && !isBedtime(context) && !isSilentModeBlocking(context)) {
+        val serviceIntent = Intent(context, ChimeService::class.java).apply {
+            putExtra(ChimeScheduler.EXTRA_IS_HALF_HOUR, isHalf)
+            putExtra(ChimeScheduler.EXTRA_HOUR_COUNT, hourCount)
+        }
+        context.startForegroundService(serviceIntent)
+        android.util.Log.d("ChimeReceiver", "Service started")
+    }
+
+    // Schedule the next chime
+    android.util.Log.d("ChimeReceiver", "Scheduling next chime...")
+    ChimeScheduler.scheduleNextChime(context)
+    android.util.Log.d("ChimeReceiver", "Next chime scheduled")
+}
 
     private fun isBedtime(context: Context): Boolean {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
