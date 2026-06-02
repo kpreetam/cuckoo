@@ -20,7 +20,19 @@ class ArtisanClockFragment : Fragment() {
     }
 
     fun tick() { if (!isAdded) return; clockView?.tick() }
-    fun triggerAnimation(count: Int) { if (!isAdded) return; clockView?.animateCuckoo(count) }
+    fun triggerAnimation(count: Int) {
+    if (!isAdded) return
+
+    // Each cuckoo cycle lasts ~900ms (door → out → bob → in)
+    val cycleDuration = 900L
+
+    for (i in 0 until count) {
+        clockView?.postDelayed({
+            clockView?.animateSingleCuckoo(i, count)
+        }, i * cycleDuration)
+    }
+}
+
 
     override fun onDestroyView() { super.onDestroyView(); clockView = null }
 
