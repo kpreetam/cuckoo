@@ -50,13 +50,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
-        requestPermissions()
-        private fun enforceInitialDndPermission() {
+    private fun enforceInitialDndPermission() {
     val prefs = PreferenceManager.getDefaultSharedPreferences(this)
     if (!prefs.contains("initial_dnd_requested")) {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -66,6 +60,12 @@ class MainActivity : AppCompatActivity() {
         prefs.edit().putBoolean("initial_dnd_requested", true).apply()
     }
 }
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)  
         requestPermissions()
         enforceInitialDndPermission()
         setupTabs()
