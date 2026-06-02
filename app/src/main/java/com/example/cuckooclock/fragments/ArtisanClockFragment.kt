@@ -28,7 +28,7 @@ class ArtisanClockFragment : Fragment() {
 
     for (i in 0 until count) {
         clockView?.postDelayed({
-            clockView?.animateSingleCuckoo(i, count)
+            clockView?.animateSingleCycle(i, count)
         }, i * cycleDuration)
     }
 }
